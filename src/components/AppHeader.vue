@@ -81,7 +81,7 @@ const addNotification = (text) => {
 const feedback = ref({ show: false, type: '', message: '' })
 const showFeedback = (type, message) => {
   feedback.value = { show: true, type, message }
-  setTimeout(() => { feedback.value.show = false }, 4000)
+  setTimeout(() => { feedback.value.show = false }, 8000)
 }
 const clearFeedback = () => {
   feedback.value = { show: false, type: '', message: '' }
@@ -396,7 +396,8 @@ const saveMenuItem = () => {
       description: formDesc.value.trim()
     }
     editingItemId.value = null
-    showFeedback('success', '✅ Menu item updated!')
+    // ✅ USE BACKTICKS HERE!
+    showFeedback('success', `✅ Menu item "${oldName}" updated successfully!`)
     addNotification(`✏️ Updated: ${oldName} → ${formName.value.trim()}`)
   } else {
     menuRecords.value.unshift({
@@ -404,7 +405,8 @@ const saveMenuItem = () => {
       category: formCategory.value, price: Number(formPrice.value),
       description: formDesc.value.trim()
     })
-    showFeedback('success', '✅ New menu item added!')
+    // ✅ USE BACKTICKS HERE!
+    showFeedback('success', `✅ Menu item "${formName.value.trim()}" added successfully!`)
     addNotification(`➕ Added Menu: ${formName.value.trim()}`)
   }
   resetMenuForm()
@@ -413,7 +415,7 @@ const saveMenuItem = () => {
 const resetMenuForm = () => {
   editingItemId.value = null
   formName.value = formCategory.value = formPrice.value = formDesc.value = ''
-  clearFeedback()
+  // ✅ DELETE THE LINE: clearFeedback() ← THIS WAS HIDING YOUR ALERT!
 }
 
 const startEditItem = (item) => {
@@ -548,13 +550,13 @@ const markAllRead = () => {
 
     <!-- FEEDBACK -->
     <div v-if="feedback.show" class="max-w-7xl mx-auto mb-6 px-1">
-      <div :class="['px-5 sm:px-6 py-3.5 sm:py-4 rounded-xl font-bold shadow-md text-base sm:text-lg',
-        feedback.type==='success' ? 'bg-green-100 text-green-800 border-2 border-green-300' :
-        feedback.type==='error' ? 'bg-red-100 text-red-800 border-2 border-red-300' :
-        'bg-blue-100 text-blue-800 border-2 border-blue-300']">
-        {{ feedback.message }}
-      </div>
-    </div>
+  <div :class="['px-5 sm:px-6 py-3.5 sm:py-4 rounded-xl font-bold shadow-md text-base sm:text-lg',
+    feedback.type==='success' ? 'bg-green-100 text-green-800 border-2 border-green-300' :
+    feedback.type==='error' ? 'bg-red-100 text-red-800 border-2 border-red-300' :
+    'bg-blue-100 text-blue-800 border-2 border-blue-300']">
+    {{ feedback.message }}
+  </div>
+</div>
 
     <!-- NAVIGATION -->
     <div class="max-w-7xl mx-auto mb-8 flex flex-wrap gap-3 px-1">
@@ -658,11 +660,7 @@ const markAllRead = () => {
                 placeholder="Order auto-fills here..."></textarea>
             </div>
 
-            <!-- 🆕 Selected Order Summary (Read-Only) -->
-            <div>
-              <label :class="['font-bold text-base block mb-1', isDarkMode ? 'text-gray-300' : 'text-gray-700']">🍽️ Order Details *</label>
-              <textarea v-model="customerForm.orderDetails" rows="4" :class="['w-full p-3 text-base border-2 rounded-xl mt-1', isDarkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-cyan-200']" placeholder="Order auto-fills here... You can also type manually."></textarea>
-            </div>
+      
 
             <!-- 5. Note -->
             <div>
