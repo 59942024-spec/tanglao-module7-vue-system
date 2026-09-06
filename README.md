@@ -66,6 +66,56 @@ The system allows **Admin Login & Logout**, user registration, order creation fr
 
 ---
 
+Updated Architecture — Module 9
+-------------------------------
+Change Request: CR-M9-01 — Add Order Status Filter
+
+✅ WHAT CHANGED:
+• Added Order Status Filter dropdown above Registered Orders list
+• Added computed property: filteredCustomerRecords
+• Data flow: customerRecords → [FILTER] → filteredCustomerRecords → Display
+
+✅ WHAT REMAINED UNCHANGED:
+• All other components (Menu, Safety, Dashboard, Login, Homepage Editor)
+• localStorage data structure — NO changes to saved records
+• All existing CRUD, Search, Validation, Delete Confirmation, Persistence
+• Data Layer → Browser localStorage fully compatible
+• Presentation Layer → Vue.js + Tailwind CSS design unchanged
+
+
+## Module 9 — Software Evolution — v1.1.0
+
+### Change Request: CR-M9-01 — Order Status Filter
+**Maintenance Type:** Perfective Maintenance
+**Date:** 2026-09-06
+
+### ✅ Added
+- Order Status Filter dropdown above Registered Orders list
+- Filter options: 📋 All Orders / ⏳ Pending / ✅ Served/Done
+- Instant updates — no page reload needed
+
+### ✅ Preserved
+- All CRUD operations (Register, Edit, Delete)
+- Mark as Done / Served workflow
+- Search in Served Orders
+- localStorage data — ALL existing records fully compatible
+- Dark/Light theme, responsive design — ALL previous features unchanged
+
+### ✅ Verification
+- npm run build → ✅ Passed
+- npm run test:run → ✅ Passed
+- All 12 manual test cases → ✅ Passed
+- localStorage backward compatibility → ✅ Verified
+
+
+Version: 1.1.0
+Type: Perfective Maintenance
+
+Added: Order Status Filter (All / Pending / Served/Done)
+Preserved: CRUD, Search, Validation, Delete Confirmation, Persistence
+Tests: 12 manual cases; Vitest suite passed; build and CI passed
+Compatibility: Older localStorage records — 100% backward compatible
+
 ## 📑 Required Fields
 
 ### Customer Registration
