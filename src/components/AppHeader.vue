@@ -277,7 +277,6 @@ const searchServedName = ref('')
 // ➕ MODULE 9: Order Status Filter
 const orderStatusFilter = ref('All')
 
-// ➕ MODULE 9: Order Status Filter
 const filteredCustomerRecords = computed(() => {
   if (orderStatusFilter.value === 'All') return customerRecords.value
   if (orderStatusFilter.value === 'Pending') return customerRecords.value
