@@ -4,5 +4,5 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
-  //base: '/tanglao-module7-vue-system/'
+  base: '/tanglao-module7-vue-system/'  // ✅ THIS LINE = YOUR REPO NAME!
 })
