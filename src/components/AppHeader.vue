@@ -116,7 +116,14 @@ const saveAllData = () => {
 
 const loadAllData = () => {
   const savedMenu = localStorage.getItem('menu-items')
-  menuRecords.value = savedMenu ? JSON.parse(savedMenu) : [...bestSellers.value]
+  
+  // ✅ Load menu items — use saved OR default bestSellers
+  if (savedMenu) {
+    menuRecords.value = JSON.parse(savedMenu)
+  } else {
+    // ✅ NO saved items → COPY bestSellers → counts will AUTO-CALCULATE!
+    menuRecords.value = [...bestSellers.value]
+  }
 
   const savedArticles = localStorage.getItem('safety-articles')
   if (savedArticles) safetyArticles.value = JSON.parse(savedArticles)
@@ -135,8 +142,13 @@ const loadAllData = () => {
 }
 
 watch([menuRecords, safetyArticles, orderStatus, customerRecords], saveAllData, { deep: true })
+// ✅ ADD THIS EXACT CODE — It FORCES counts to refresh!
+watch(menuRecords, () => {
+  // This empty watcher TRIGGERS Vue to recalculate menuCountByCategory!
+}, { deep: true })
 watch(homeContent, saveAllData, { deep: true })
 onMounted(() => {
+  localStorage.removeItem('menu-items')
   loadAllData()
   showFeedback('success', '✅ Welcome! Admin Dashboard loaded successfully.')
   addNotification('🔓 Admin Dashboard opened')
@@ -278,21 +290,35 @@ const searchServedName = ref('')
 const orderStatusFilter = ref('All')
 
 const filteredCustomerRecords = computed(() => {
-  if (orderStatusFilter.value === 'All') return customerRecords.value
-  if (orderStatusFilter.value === 'Pending') return customerRecords.value
-  if (orderStatusFilter.value === 'Served') return servedOrders.value
+  if (orderStatusFilter.value === 'All') {
+    // ✅ SHOW BOTH PENDING + SERVED, SORTED BY DATE (NEWEST FIRST)
+    return [...customerRecords.value, ...servedOrders.value].sort((a, b) => b.id - a.id)
+  }
+  if (orderStatusFilter.value === 'Pending') {
+    // ✅ SHOW ONLY PENDING (customers still in customerRecords)
+    return customerRecords.value
+  }
+  if (orderStatusFilter.value === 'Served') {
+    // ✅ SHOW ONLY SERVED
+    return servedOrders.value
+  }
   return customerRecords.value
 })
 
 const markOrderAsDone = (cust) => {
-  // Add to Served list — Filter will display it when "Served/Done" selected
+  // ✅ ADD TO SERVED LIST
   servedOrders.value.unshift({
     ...cust,
     servedAt: new Date().toLocaleString()
   })
-  // ✅ Keep in Registered list — but filter hides it from "Pending" view
-  // NOT removed anymore — just filtered!
-  showFeedback('success', `✅ Order for "${cust.name}" marked as Done!`)
+  // ✅ REMOVE FROM PENDING LIST
+  customerRecords.value = customerRecords.value.filter(c => c.id !== cust.id)
+  
+  // ✅ SAVE BOTH LISTS
+  localStorage.setItem('customers', JSON.stringify(customerRecords.value))
+  localStorage.setItem('served-orders', JSON.stringify(servedOrders.value))
+  
+  showFeedback('success', `✅ Order for "${cust.name}" marked as SERVED!`)
   addNotification(`✅ Served: ${cust.name}`)
 }
 
@@ -387,12 +413,14 @@ const totalEarnings = computed(() => {
   return registeredSum + servedSum
 })
 const menuCountByCategory = computed(() => {
-  const counts = {}
-  categories.forEach(cat => counts[cat.name] = 0)
-  menuRecords.value.forEach(item => {
-    if (counts[item.category] !== undefined) counts[item.category]++
-  })
-  return counts
+  return {
+    'Burgers': menuRecords.value.filter(i => i.category === 'Burgers').length,
+    'Pizza': menuRecords.value.filter(i => i.category === 'Pizza').length,
+    'Rice & Noodles': menuRecords.value.filter(i => i.category === 'Rice & Noodles').length,
+    'Desserts': menuRecords.value.filter(i => i.category === 'Desserts').length,
+    'Drinks': menuRecords.value.filter(i => i.category === 'Drinks').length,
+    'Snacks': menuRecords.value.filter(i => i.category === 'Snacks').length
+  }
 })
 
 const selectCategory = (catName) => {
@@ -867,12 +895,12 @@ if (typeof document !== 'undefined') {
 <!-- 📋 REGISTERED DETAILS HEADER + FILTER DROPDOWN -->
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5">
   <h4 class="text-lg font-bold" :class="isDarkMode ? 'text-blue-400' : 'text-blue-700'">📋 Registered Details & Orders — {{ filteredCustomerRecords.length }}</h4>
-  <select v-model="orderStatusFilter" 
-    :class="['px-4 py-2 rounded-xl font-bold border-2', isDarkMode ? 'bg-gray-800 border-blue-700 text-white' : 'bg-white border-blue-200']">
-    <option value="All">📋 All Orders</option>
-    <option value="Pending">⏳ Pending</option>
-    <option value="Served">✅ Served/Done</option>
-  </select>
+ <select v-model="orderStatusFilter" 
+  :class="['px-4 py-2 rounded-xl font-bold border-2', isDarkMode ? 'bg-gray-800 border-blue-700 text-white' : 'bg-white border-blue-200']">
+  <option value="All">📋 All Orders</option>
+  <option value="Pending">⏳ Pending</option>
+  <option value="Served">✅ Served/Done</option>
+</select>
 </div>          
           <div v-if="customerRecords.length===0" class="py-10 text-center rounded-xl" :class="isDarkMode ? 'bg-gray-800/50' : 'bg-white'">
             <p class="text-3xl mb-2">📭</p>
@@ -880,7 +908,7 @@ if (typeof document !== 'undefined') {
           </div>
 
                     <div v-else class="space-y-4 max-h-[650px] overflow-y-auto pr-1">
-           <div v-for="cust in filteredCustomerRecords" :key="cust.id" :class="['p-4 rounded-xl border-2', isDarkMode ? 'bg-gray-800 border-blue-900/30' : 'bg-white border-blue-100']">
+          <div v-for="cust in filteredCustomerRecords" :key="cust.id" :class="['p-4 rounded-xl border-2', isDarkMode ? 'bg-gray-800 border-blue-900/30' : 'bg-white border-blue-100']">
               <!-- ✏️ EDIT MODE -->
               <div v-if="editingCustomerId === cust.id" class="space-y-2">
                 <input v-model="editCustomerForm.name" :class="['w-full p-2 rounded-lg border', isDarkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-blue-200']" />
@@ -925,6 +953,7 @@ if (typeof document !== 'undefined') {
                   <p class="font-bold text-lg">{{ cust.name }}</p>
                   <div class="flex gap-1">
                     <button @click="startEditCustomer(cust)" class="px-2 py-1 text-xs bg-blue-500 text-white rounded font-bold hover:bg-blue-600">✏️ Edit</button>
+                  <button @click="markOrderAsDone(cust)" class="px-2 py-1 text-xs bg-emerald-500 text-white rounded font-bold hover:bg-emerald-600">✅ Served</button>
                     <span class="text-sm px-2 py-0.5 rounded-full font-bold" :class="cust.serviceType==='Dine-in' ? 'bg-cyan-100 text-cyan-700' : 'bg-orange-100 text-orange-700'">
                       {{ cust.serviceType==='Dine-in' ? '🍽️ Dine-in' : '📦 Takeout' }}
                     </span>
